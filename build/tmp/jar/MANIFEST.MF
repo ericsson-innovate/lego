@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Implementation-Title: Gradle Quickstart
+Implementation-Version: 1.0
+Main-Class: com.ericsson.stoffe.lego.MainMan
+Class-Path: /home/root/lejos/lib/ev3classes.jar /home/root/lejos/lib/d
+ busjava.jar /home/root/lejos/libjna/usr/share/java/jna.jar
+

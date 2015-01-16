@@ -1,0 +1,66 @@
+apply plugin: 'java'
+apply plugin: 'gradle-one-jar'
+apply plugin: 'eclipse'
+
+sourceCompatibility = 1.7
+version = '1.0'
+
+configurations {
+    fatJarBuild
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Quickstart', 'Implementation-Version': version
+        attributes 'Main-Class':'com.ericsson.stoffe.lego.MainMan'
+        attributes 'Class-Path':'/home/root/lejos/lib/ev3classes.jar /home/root/lejos/lib/dbusjava.jar /home/root/lejos/libjna/usr/share/java/jna.jar'
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven{
+    	url 'https://repo.eclipse.org/content/repositories/paho-releases/'
+    }
+}
+
+dependencies {
+	compile group: 'org.eclipse.paho',name:'org.eclipse.paho.client.mqttv3', version:'1.0.1'
+    compile fileTree(dir:'repos')
+    testCompile group: 'junit', name: 'junit', version: '4.+'    
+    fatJarBuild group: 'org.eclipse.paho',name:'org.eclipse.paho.client.mqttv3', version:'1.0.1'
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.github.rholder:gradle-one-jar:1.0.4'
+    }
+}
+
+task fatjar(type: OneJar) {
+    mainClass = 'com.ericsson.stoffe.lego.MainMan'
+    manifest {
+        attributes 'Class-Path':'/home/root/lejos/lib/ev3classes.jar /home/root/lejos/lib/dbusjava.jar /home/root/lejos/libjna/usr/share/java/jna.jar'
+    }
+    targetConfiguration = configurations.fatJarBuild
+    //archiveName = 'stoffe.jar'
+}
+
+artifacts {
+    archives fatjar
+}
+
+test {
+    systemProperties 'property': 'value'
+}
+
+uploadArchives {
+    repositories {
+       flatDir {
+           dirs 'repos'
+       }
+    }
+}
