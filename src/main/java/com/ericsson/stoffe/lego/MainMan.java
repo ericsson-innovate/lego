@@ -35,6 +35,7 @@ public class MainMan {
 	private static int[] lightRGB = { 255, 255, 255 };
 	private static EV3MediumRegulatedMotor ma,mc,md;
     private static EV3LargeRegulatedMotor mb;
+	private static MusicMaker alarmMaker = new MusicMaker();
 
 	/**
 	 * @param args
@@ -148,10 +149,10 @@ public class MainMan {
 					blink = true;
 				}
                 else if ("alarm_on".equals(cmd)) {
-                     sample = "alarm.wav";
-                }
+					alarmMaker.start();
+				}
                 else if ("alarm_off".equals(cmd)) {
-                    // sample = "honk.wav";
+                    alarmMaker.stop();
                 }
 
                 else if ("openTrunk".equals(cmd)) {
@@ -247,6 +248,31 @@ public class MainMan {
 			}
 		});
 		mqtt.subscribe("toy/luigi");
+	}
+
+
+	// Inner music player class to keep playing sounds
+	public static class MusicMaker extends Thread {
+		String sample = "honk.wav";
+		int delay = 1000;
+
+		public void run() {
+
+			File f = new File("/home/lejos/programs/sounds/" + sample);
+			System.out.println("File = " + f.toString());
+
+			while (true) {
+				try {
+					int returnCode = Sound.playSample(f, 100);
+					System.err.println("Play sample return code is: " + returnCode);
+					Thread.sleep(delay);
+					}
+				catch (InterruptedException ie) {
+					System.out.println("Exception in main thread: "+ie.getMessage());
+				}
+
+			}
+		}
 	}
 
 }
