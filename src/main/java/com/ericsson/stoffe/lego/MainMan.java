@@ -82,22 +82,31 @@ public class MainMan {
 
 		MainMan.connectToMQTT();
 		// myPort.setTypeAndMode(arg0, arg1)
-//
-//		try {
-//			I2CPort myPort = p1.open(I2CPort.class);
-//			System.out.println("Mode =" + myPort.getMode() + " type="
-//					+ myPort.getType());
-//			//myPort.setMode(I2CPort.HIGH_SPEED);
-//			lights = new DLights(myPort);
-//		} catch (Throwable t) {
-//			System.err.println("Failed with Lights ... "
-//					+ t.getLocalizedMessage());
-//		}
-		// lights = new DLights(port1);
+
+		try {
+			I2CPort myPort = p1.open(I2CPort.class);
+			System.out.println("Mode =" + myPort.getMode() + " type="
+					+ myPort.getType());
+			//myPort.setMode(I2CPort.HIGH_SPEED);
+			lights = new DLights(myPort);
+		} catch (Throwable t) {
+			System.err.println("Failed with Lights ... "
+					+ t.getLocalizedMessage());
+		}
+
+
+		//lights = new DLights(port1);
 
 		System.out.println("Laser = " + lights);
 
-		// Delay.msDelay(5000);
+		lights.setColor(1,255,255,255);
+
+		lights.enable(1);
+
+		Delay.msDelay(2000);
+
+		lights.disable(1);
+
 		while (true) {
 			// connectToMQTT();
 			Delay.msDelay(5000);
