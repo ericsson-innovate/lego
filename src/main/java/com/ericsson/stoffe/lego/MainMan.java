@@ -32,14 +32,14 @@ public class MainMan {
 	private static boolean engineRunning = false;
 	private static boolean alarmOn = false;
 	private static boolean trunkOpen = false;
-	private static boolean doorsLocked = false;
+	private static boolean doorsLocked = true;
 
 	private static DLights lights = null;
 	private static int lightN = 1;
 	private static int[] lightRGB = { 255, 255, 255 };
 	private static EV3MediumRegulatedMotor ma,mc,md;
 	private static EV3LargeRegulatedMotor mb;
-	private static MusicMaker alarmMaker;
+	private static MusicMaker alarmMaker, engineSoundMaker;
 
 	private static String mqtthost =  "mafalda.hack.att.io";
 	private static String mqttport = "11883";
@@ -185,14 +185,22 @@ public class MainMan {
 						System.out.println("Engine On! Engine already running. Doing nothing.");
 					else{
 						engineRunning = true;
-						sample = "engine_on.wav";
+						File f = new File("/home/lejos/programs/sounds/" + "engine_on.wav");
+						Sound.playSample(f, 100);
+						Delay.msDelay(2000);
+
+						System.out.println("Engine On! Starting engine. Making sound.");
+
+						engineSoundMaker = new MusicMaker("engine_running.wav", 1000);
+						engineSoundMaker.start();
+
 						System.out.println("Engine On! Starting engine. Making sound.");
 					}
 				}
 				else if ("engine_off".equals(cmd)) {
 					if (engineRunning){
 						engineRunning = false;
-						sample = "engine_on.wav";
+						engineSoundMaker.stop();
 						System.out.println("Engine Off! Stopping engine. Stop making sound.");
 					}
 					else {
@@ -217,7 +225,7 @@ public class MainMan {
 					if (alarmOn){
 						System.out.println("Alarm On! Alarm already engaged. Doing nothing.");
 					} else {
-						alarmMaker = new MusicMaker();
+						alarmMaker = new MusicMaker("alarm.wav", 1000);
 						alarmMaker.start();
 						System.out.println("Alarm On! Starting alarm.");
 						alarmOn = true;
@@ -278,13 +286,24 @@ public class MainMan {
 				}
 				else if ("pickup".equals(cmd)) {
 
-					if (!engineRunning){
+					System.out.println("Pickup! Start by turning on engine if not on...");
+
+					if (engineRunning)
+						System.out.println("Engine On! Engine already running. Doing nothing.");
+					else{
 						engineRunning = true;
+						File f = new File("/home/lejos/programs/sounds/" + "engine_on.wav");
+						Sound.playSample(f, 100);
+						Delay.msDelay(2000);
+
+						System.out.println("Engine On! Starting engine. Making sound.");
+
+						engineSoundMaker = new MusicMaker("engine_running.wav", 1000);
+						engineSoundMaker.start();
 					}
 
-					System.out.println("Pickup! Start pre-programmed route.");
-
 					try {
+						System.out.println("Pickup! Start pre-programmed route.");
 						// Propulsion
 						ma = new EV3MediumRegulatedMotor(MotorPort.A);
 						// Steering
@@ -318,15 +337,27 @@ public class MainMan {
 								+ t.getLocalizedMessage());
 						t.printStackTrace();
 					}
+					System.out.println("Pickup done! Engine Off! Stopping engine. Stop making sound.");
+					engineSoundMaker.stop();
 					engineRunning = false;
 				}
 
 				else if ("park".equals(cmd)) {
 
-					System.out.println("Park! Start pre-programmed route.");
+					System.out.println("Park! Start by turning on engine if not on...");
 
-					if (!engineRunning){
+					if (engineRunning)
+						System.out.println("Engine On! Engine already running. Doing nothing.");
+					else{
 						engineRunning = true;
+						File f = new File("/home/lejos/programs/sounds/" + "engine_on.wav");
+						Sound.playSample(f, 100);
+						Delay.msDelay(2000);
+
+						System.out.println("Engine On! Starting engine. Making sound.");
+
+						engineSoundMaker = new MusicMaker("engine_running.wav", 1000);
+						engineSoundMaker.start();
 					}
 
 					try {
@@ -360,6 +391,8 @@ public class MainMan {
 								+ t.getLocalizedMessage());
 						t.printStackTrace();
 					}
+					System.out.println("Park done! Engine Off! Stopping engine. Stop making sound.");
+					engineSoundMaker.stop();
 					engineRunning = false;
 				}
 
@@ -399,8 +432,15 @@ public class MainMan {
 
 				// Inner music player class to keep playing sounds
 		public static class MusicMaker extends Thread {
-			String sample = "honk.wav";
-			int delay = 1000;
+
+					String sample;
+					int loopDelay;
+
+			public  MusicMaker(String sample, int loopDelay){
+				this.sample = sample;
+				this.loopDelay = loopDelay;
+			}
+
 
 			public void run() {
 
@@ -411,7 +451,7 @@ public class MainMan {
 					try {
 						int returnCode = Sound.playSample(f, 100);
 						System.err.println("Play sample return code is: " + returnCode);
-						Thread.sleep(delay);
+						Thread.sleep(loopDelay);
 					}
 					catch (InterruptedException ie) {
 						System.out.println("Exception in main thread: "+ie.getMessage());
