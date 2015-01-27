@@ -1,11 +1,21 @@
-echo "Initializing $1"
+if [ $# -ne 2 ]
+  then
+    echo 
+    echo "Parameter error..."
+    echo 
+    echo "Usage: init_vehicle.sh [luigi_host] [luigi_port]"
+    echo "Example: init_vehicle.sh mafalda.hack.att.io 3000"
+    echo 
+    exit 0
+fi
 
 URL=http://$1:$2
 
 REMOTESERVICESURL=$URL/remoteservices/v1/vehicle
 
+echo "Using $REMOTESERVICESURL..."
+
 VIN=3887930279
-LOCKVIN=6454813533
 
 # Turn Engine OFff
 AUTH_HEADER="Authorization: Basic cHJvdmlkZXI6MTIzNA=="
