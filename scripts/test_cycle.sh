@@ -82,7 +82,7 @@ sleep 5
 echo "Pickup..."
 curl -X POST --header "$AUTH_HEADER" --header "$USER_HEADER" --header "$PASSWORD_HEADER" $REMOTESERVICESURL/pickup/$VIN -s > /dev/null
 
-echo "Sleep 25 seconds..."
+echo "Sleep 35 seconds..."
 sleep 25
 
 echo "Unlock..."
