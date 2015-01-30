@@ -36,6 +36,8 @@ public class MainMan {
 	private static boolean trunkOpen = false;
 	private static boolean doorsLocked = true;
 
+	final private static int steerAngle = 65;
+
 	private static DLights lights = null;
 	private static int lightN = 1;
 	private static int[] lightRGB = { 255, 255, 255 };
@@ -46,8 +48,10 @@ public class MainMan {
 	private static String mqtthost =  "mafalda.hack.att.io";
 	private static String mqttport = "11883";
 
-	private static String[] pickupDirections = {"forward-5000", "rightTurn", "forward-2000", "leftTurn", "forward-5000", "stop-2000", "backward-2000", "stop-2000"};
-	private static String[] parkDirections = {"forward-2000", "stop-2000", "rightTurn", "backward-2000", "leftTurn", "backward-5000", "stop-3000"};
+	private static String[] pickupDirections = {"forward-2000", "rightTurn-2000", "forward-2000", "stop-2000", "leftTurn-1000", "forward-2000", "stop-1000", "backward-1000", "stop-1000"};
+	private static String[] parkDirections = {"forward-1000", "stop-2000", "rightTurn-1000", "backward-2000", "leftTurn-2000", "backward-2000", "stop-1000"};
+
+	private static I2CSensor dummy;
 	/**
 	 * @param args
 	 * @throws InterruptedException
@@ -133,20 +137,21 @@ public class MainMan {
 					// Keeps engine running in any direction - fans active or not
 					System.out.println("Engine On! Engine already running. Doing nothing.");
 				else{
+					lightsOn(4);
 					engineRunning = true;
 				    playSample("engine_on.wav");
 					System.out.println("Engine On! Starting engine on motorport D.");
 					md = new EV3MediumRegulatedMotor(MotorPort.D);
 					// Set down speed
 					md.setSpeed(100);
-					md.forward();
+					md.backward();
 				}
 				// Preheat condition
 				if (!fansActive && preheat){
 					//Delay and activate fans
 					System.out.println("Preheat! As we know engine is running lets wait a little then make sure to activate fans ");
 					Delay.msDelay(2000);
-					md.backward();
+					md.forward();
 					fansActive = true;
 				}
 			}
@@ -160,11 +165,62 @@ public class MainMan {
 					fansActive = false;
 					md.stop();
 					md.close();
+					lightsOff(4);
 				}
 				else {
 					System.out.println("Engine Off! Engine already off. Doing nothing.");
 				}
 			}
+
+			public void lightsOn(int addr){
+				dummy = new I2CSensor(SensorPort.S4, I2CPort.TYPE_HIGHSPEED);
+
+				try {
+				// Blinking white. Assume daisy chain is set to individual
+				lights = new DLights(dummy.getPort());
+				lights.enable(addr);
+
+				lights.setColor(1, 0, 254, 254);
+				lights.setColor(2, 0, 254, 254);
+				lights.setColor(3, 0, 254, 254);
+				lights.setColor(4, 0, 254, 254);
+
+			} catch (Throwable t) {
+				System.err.println("Failed with Lights in blink function ... "
+						+ t.getLocalizedMessage());
+			}
+
+			}
+
+	public void lightsOff(int addr){
+
+	try {
+		// Blinking white. Assume daisy chain is set to individual
+		lights = new DLights(dummy.getPort());
+		lights.enable(addr);
+
+		lights.setColor(1, 0, 254, 254);
+		lights.setColor(2, 0, 254, 254);
+		lights.setColor(3, 0, 254, 254);
+		lights.setColor(4, 0, 254, 254);
+
+	} catch (Throwable t) {
+		System.err.println("Failed with Lights in blink function ... "
+				+ t.getLocalizedMessage());
+	}
+
+		lights.setColor(1, 0, 0, 0);
+		lights.setColor(2, 0, 0, 0);
+		lights.setColor(3, 0, 0, 0);
+		lights.setColor(4, 0, 0, 0);
+
+		//lights.setExternalLED(addr, 0);
+		lights.disable(addr);
+		System.out.println("Off = " + lights.isEnabled(addr));
+		dummy.close();
+
+}
+
 
 			// Does one blink on sensor port "addr" duration "milliseconds"
 			public void blink(int addr, int delay){
@@ -175,10 +231,10 @@ public class MainMan {
 					lights = new DLights(dummy.getPort());
 					lights.enable(addr);
 
-					lights.setColor(1, 254, 254, 254);
-					lights.setColor(2, 254, 254, 254);
-					lights.setColor(3, 254, 254, 254);
-					lights.setColor(4, 254, 254, 254);
+					lights.setColor(1, 0, 254, 254);
+					lights.setColor(2, 0, 254, 254);
+					lights.setColor(3, 0, 254, 254);
+					lights.setColor(4, 0, 254, 254);
 
 					// keep light on delay ms
 					Delay.msDelay(delay);
@@ -187,6 +243,12 @@ public class MainMan {
 					System.err.println("Failed with Lights in blink function ... "
 							+ t.getLocalizedMessage());
 				}
+				lights.setColor(1, 0, 0, 0);
+				lights.setColor(2, 0, 0, 0);
+				lights.setColor(3, 0, 0, 0);
+				lights.setColor(4, 0, 0, 0);
+
+				//lights.setExternalLED(addr, 0);
 				lights.disable(addr);
 				System.out.println("Off = " + lights.isEnabled(addr));
 				dummy.close();
@@ -202,12 +264,12 @@ public class MainMan {
 					// Trunk engine
 					try {
 						mc = new EV3MediumRegulatedMotor(MotorPort.C);
-						mc.forward();
-						Delay.msDelay(5000);
+						mc.backward();
+						Delay.msDelay(3500);
 						mc.stop();
 						mc.close();
 					} catch (Throwable t) {
-						System.err.println("Failed with opeing trunk - motor C... "
+						System.err.println("Failed with opening trunk - motor C... "
 								+ t.getLocalizedMessage());
 						t.printStackTrace();
 					}
@@ -222,8 +284,8 @@ public class MainMan {
 					// Trunk engine
 					try {
 						mc = new EV3MediumRegulatedMotor(MotorPort.C);
-						mc.backward();
-						Delay.msDelay(5000);
+						mc.forward();
+						Delay.msDelay(3500);
 						mc.stop();
 						mc.close();
 					} catch (Throwable t) {
@@ -300,9 +362,17 @@ public class MainMan {
 						startEngine(false);
 					}
 					// Set steering in neutral
-					if (mb.getPosition() != 0) {
+					// Set limit angle to 65 degrees
+
+					System.out.println("Getting intial steering angle: " + mb.getPosition());
+					System.out.println("Getting speed " + mb.getSpeed());
+
+					mb.setSpeed(50);
+
+					if (mb.getPosition() != 0.0) {
 						// Setting steeting angle to 0
-						mb.rotateTo(0);
+						mb.rotate(0);
+						System.out.println("Rotating to neutral");
 					}
 
 					for (int i = 0; i < directions.length; i++) {
@@ -322,33 +392,40 @@ public class MainMan {
 
 						switch (command) {
 							case "stop":
-								ma.stop();
+								//ma.stop();
+								Delay.msDelay(duration);
 								break;
 							case "wait":
+								Delay.msDelay(duration);
 								break;
 							case "forward":
 								ma.forward();
+								Delay.msDelay(duration);
 								break;
 							case "backward":
 								ma.backward();
+								Delay.msDelay(duration);
 								break;
 							case "rightTurn":
-								mb.rotateTo(65);
+								mb.rotate(steerAngle);
+								Delay.msDelay(duration);
+								mb.rotate(-steerAngle);
 								break;
 							case "leftTurn":
-								mb.rotateTo(-65);
+								mb.rotate(-steerAngle);
+								Delay.msDelay(duration);
+								mb.rotate(steerAngle);
 								break;
 							case "neutral":
-								mb.rotateTo(0);
+								//mb.rotate(-mb.getPosition());
+								System.out.println("Rotating back to Neutral");
 								break;
 						}
 
-						Delay.msDelay(duration);
+						ma.stop();
+
 						// end for-loop
 					}
-
-					// Set steering back to neutral
-					mb.rotateTo(0);
 
 					// Stopping propulsion and steering
 					ma.stop();
@@ -419,7 +496,7 @@ public class MainMan {
 						System.out.println("Alarm On! Alarm already engaged. Doing nothing.");
 					} else {
 						System.out.println("Alarm On! Starting alarm.");
-						alarmMaker = new MusicMaker("alarm.wav", 500);
+						alarmMaker = new MusicMaker("alarm.wav", 300);
 						alarmMaker.start();
 						alarmOn = true;
 					}
