@@ -38,12 +38,12 @@ public class MainMan {
 
 	final private static int steerAngle = 65;
 
-	private static DLights lights = null;
+	private static DLights frontLights,rearLights,lights = null;
 	private static int lightN = 1;
 	private static int[] lightRGB = { 255, 255, 255 };
 	private static EV3MediumRegulatedMotor ma,mc,md;
 	private static EV3LargeRegulatedMotor mb;
-	private static MusicMaker alarmMaker, engineSoundMaker;
+	private static MusicMaker alarmMaker;
 
 	private static String mqtthost =  "mafalda.hack.att.io";
 	private static String mqttport = "11883";
@@ -51,7 +51,7 @@ public class MainMan {
 	private static String[] pickupDirections = {"forward-2000", "rightTurn-2000", "forward-2000", "stop-2000", "leftTurn-1000", "forward-2000", "stop-1000", "backward-1000", "stop-1000"};
 	private static String[] parkDirections = {"forward-1000", "stop-2000", "rightTurn-1000", "backward-2000", "leftTurn-2000", "backward-2000", "stop-1000"};
 
-	private static I2CSensor dummy;
+	private static I2CSensor dummy, sensor3, sensor4;
 	/**
 	 * @param args
 	 * @throws InterruptedException
@@ -173,17 +173,22 @@ public class MainMan {
 			}
 
 			public void lightsOn(int addr){
-				dummy = new I2CSensor(SensorPort.S4, I2CPort.TYPE_HIGHSPEED);
+				sensor3 = new I2CSensor(SensorPort.S3, I2CPort.TYPE_HIGHSPEED);
+				sensor4 = new I2CSensor(SensorPort.S4, I2CPort.TYPE_HIGHSPEED);
 
 				try {
 				// Blinking white. Assume daisy chain is set to individual
-				lights = new DLights(dummy.getPort());
-				lights.enable(addr);
+				rearLights = new DLights(sensor3.getPort());
+				frontLights = new DLights(sensor4.getPort());
+				
+				//lights.enable(addr);
 
-				lights.setColor(1, 0, 254, 254);
-				lights.setColor(2, 0, 254, 254);
-				lights.setColor(3, 0, 254, 254);
-				lights.setColor(4, 0, 254, 254);
+				rearLights.setColor(2, 0, 254, 254);
+				rearLights.setColor(3, 0, 254, 254);
+
+
+				frontLights.setColor(2, 0, 254, 254);
+				frontLights.setColor(3, 0, 254, 254);
 
 			} catch (Throwable t) {
 				System.err.println("Failed with Lights in blink function ... "
@@ -196,45 +201,42 @@ public class MainMan {
 
 	try {
 		// Blinking white. Assume daisy chain is set to individual
-		lights = new DLights(dummy.getPort());
-		lights.enable(addr);
+		rearLights = new DLights(sensor3.getPort());
+		frontLights = new DLights(sensor4.getPort());
 
-		lights.setColor(1, 0, 254, 254);
-		lights.setColor(2, 0, 254, 254);
-		lights.setColor(3, 0, 254, 254);
-		lights.setColor(4, 0, 254, 254);
+		rearLights.setColor(2, 0, 0, 0);
+		rearLights.setColor(3, 0, 0, 0);
+		frontLights.setColor(2, 0, 0, 0);
+		frontLights.setColor(3, 0, 0, 0);
 
 	} catch (Throwable t) {
 		System.err.println("Failed with Lights in blink function ... "
 				+ t.getLocalizedMessage());
 	}
 
-		lights.setColor(1, 0, 0, 0);
-		lights.setColor(2, 0, 0, 0);
-		lights.setColor(3, 0, 0, 0);
-		lights.setColor(4, 0, 0, 0);
-
-		//lights.setExternalLED(addr, 0);
-		lights.disable(addr);
-		System.out.println("Off = " + lights.isEnabled(addr));
-		dummy.close();
+		//System.out.println("Off = " + lights.isEnabled(addr));
+		sensor3.close();
+		sensor4.close();
 
 }
 
 
 			// Does one blink on sensor port "addr" duration "milliseconds"
-			public void blink(int addr, int delay){
-				I2CSensor dummy = new I2CSensor(SensorPort.S4, I2CPort.TYPE_HIGHSPEED);
+			public void blink(int delay){
+				I2CSensor sensor3 = new I2CSensor(SensorPort.S3, I2CPort.TYPE_HIGHSPEED);
+				I2CSensor sensor4 = new I2CSensor(SensorPort.S4, I2CPort.TYPE_HIGHSPEED);
+
 
 				try {
 					// Blinking white. Assume daisy chain is set to individual
-					lights = new DLights(dummy.getPort());
-					lights.enable(addr);
+					rearLights = new DLights(sensor3.getPort());
+					frontLights = new DLights(sensor4.getPort());
+		
+					frontLights.setColor(1, 0, 100, 100);
+					frontLights.setColor(4, 0, 100, 100);
 
-					lights.setColor(1, 0, 254, 254);
-					lights.setColor(2, 0, 254, 254);
-					lights.setColor(3, 0, 254, 254);
-					lights.setColor(4, 0, 254, 254);
+					rearLights.setColor(1, 0, 100, 100);
+					rearLights.setColor(4, 0, 100, 100);
 
 					// keep light on delay ms
 					Delay.msDelay(delay);
@@ -243,22 +245,21 @@ public class MainMan {
 					System.err.println("Failed with Lights in blink function ... "
 							+ t.getLocalizedMessage());
 				}
-				lights.setColor(1, 0, 0, 0);
-				lights.setColor(2, 0, 0, 0);
-				lights.setColor(3, 0, 0, 0);
-				lights.setColor(4, 0, 0, 0);
+				rearLights.setColor(1, 0, 0, 0);
+				rearLights.setColor(4, 0, 0, 0);
+				frontLights.setColor(1, 0, 0, 0);
+				frontLights.setColor(4, 0, 0, 0);
 
-				//lights.setExternalLED(addr, 0);
-				lights.disable(addr);
-				System.out.println("Off = " + lights.isEnabled(addr));
-				dummy.close();
+			
+				sensor3.close();
+				sensor4.close();
 			}
 
 			// Opens trunk
 			public void openTrunk(){
 				if (trunkOpen){
 					System.out.println("Open Trunk! Trunk already open. Blinking lights.");
-					blink(4,200);
+					blink(200);
 				} else {
 					System.out.println("Open Trunk! Opening trunk.");
 					// Trunk engine
@@ -296,7 +297,7 @@ public class MainMan {
 					trunkOpen = false;
 				} else {
 					System.out.println("Close Trunk! Trunk already closed. Blinking lights.");
-					blink(4,200);
+					blink(200);
 				}
 			}
 
@@ -304,12 +305,12 @@ public class MainMan {
 			public void doorLock(){
 				if (doorsLocked){
 					System.out.println("Lock! Doors already locked. Blinking lights.");
-					blink(4,200);
+					blink(200);
 				} else {
 					System.out.println("Lock! Locking doors. Blink lights make sound.");
 					doorsLocked = true;
 					playSample("lock.wav");
-					blink(4,200);
+					blink(200);
 
 				}
 			}
@@ -319,26 +320,15 @@ public class MainMan {
 				if (doorsLocked){
 					System.out.println("Door unlock! Unlocking doors. Blink lights make sound.");
 					doorsLocked = false;
-					blink(4,200);
+					blink(200);
 					playSample("unlock.wav");
 
 				} else {
 					System.out.println("Door unlock! Doors already unlocked. Blinking lights.");
-					blink(4,200);
+					blink(200);
 				}
 			}
 
-			// Honks
-			public void honk(){
-				System.out.println("Honk! Make sound.");
-				playSample("honk.wav");
-			}
-
-			// Honks
-			public void blink(){
-				System.out.println("Blink! Blinking lights.");
-				blink(4,200);
-			}
 
 			// Preheat
 			public void preheat(){
@@ -407,14 +397,18 @@ public class MainMan {
 								Delay.msDelay(duration);
 								break;
 							case "rightTurn":
-								mb.rotate(steerAngle);
-								Delay.msDelay(duration);
+								Blinker rightBlinker = new Blinker(4,500,false,true);
+								rightBlinker.start();
 								mb.rotate(-steerAngle);
+								Delay.msDelay(duration);
+								mb.rotate(steerAngle);
 								break;
 							case "leftTurn":
-								mb.rotate(-steerAngle);
-								Delay.msDelay(duration);
+								Blinker leftBlinker = new Blinker(4,500,true,false);
+								leftBlinker.start();
 								mb.rotate(steerAngle);
+								Delay.msDelay(duration);
+								mb.rotate(-steerAngle);
 								break;
 							case "neutral":
 								//mb.rotate(-mb.getPosition());
@@ -480,7 +474,7 @@ public class MainMan {
 				else if ("honk_blink".equals(cmd)) {
 					System.out.println("Honk/Blink! Blink lights make sound.");
 					playSample("honk.wav");
-					blink(4,200);
+					blink(200);
 				}
 				else if ("honk".equals(cmd)) {
 					System.out.println("Honk! Make sound.");
@@ -488,7 +482,7 @@ public class MainMan {
 				}
 				else if ("blink".equals(cmd)) {
 					System.out.println("Blink! Blinking lights.");
-					blink(4,200);
+					blink(200);
 				}
 
 				else if ("alarm_on".equals(cmd)) {
@@ -504,7 +498,7 @@ public class MainMan {
 				else if ("alarm_off".equals(cmd)) {
 					if (alarmOn){
 						System.out.println("Alarm Off! Stopping alarm.");
-						alarmMaker.stop();
+						alarmMaker.stopRunning();
 						alarmOn = false;
 					} else {
 						System.out.println("Alarm Off! Alarm already off. Doing nothing.");
@@ -537,15 +531,83 @@ public class MainMan {
 		}
 
 
+// Inner blinker thread to keep playing blinking
+		public static class Blinker extends Thread {
+					int loopDelay;
+					int nrOfBlinks;
+					boolean keepRunning = true;
+					boolean leftBlinker, rightBlinker;
+
+			public  Blinker(int nrOfBlinks, int loopDelay, boolean leftBlinker, boolean rightBlinker){
+				this.nrOfBlinks = nrOfBlinks;
+				this.loopDelay = loopDelay;
+				this.leftBlinker = leftBlinker;
+				this.rightBlinker = rightBlinker;
+			}
+
+			public void stopRunning(){
+				keepRunning = false;
+			}
+
+
+			public void run() {
+
+				System.out.println("Blinking right = " + rightBlinker + " left = " + leftBlinker + ", " + nrOfBlinks + "times");
+				
+				int i = 0;
+
+
+				try {
+					// Assume rearLight and frontLight initiated
+
+					while (keepRunning && nrOfBlinks > i++) {
+
+						if (rightBlinker){
+							rearLights.setColor(1, 0, 100, 100);
+							frontLights.setColor(4, 0, 100, 100);
+						}
+
+						if (leftBlinker){
+							rearLights.setColor(4, 0, 100, 100);
+							frontLights.setColor(1, 0, 100, 100);
+						}
+
+							// keep light on delay ms
+							Delay.msDelay(loopDelay);
+
+							rearLights.setColor(1, 0, 0, 0);
+							rearLights.setColor(4, 0, 0, 0);
+
+							frontLights.setColor(1, 0, 0, 0);
+							frontLights.setColor(4, 0, 0, 0);
+
+							// keep light on delay ms
+							Delay.msDelay(loopDelay);
+
+						} 
+					}
+					catch (Throwable t) {
+						System.err.println("Failed with Lights in blink function ... "
+								+ t.getLocalizedMessage());
+					} 
+				} // end run						
+			} //end class
+		
+
 
 		// Inner music player class to keep playing sounds
 		public static class MusicMaker extends Thread {
 					String sample;
 					int loopDelay;
+					boolean keepRunning = true;
 
 			public  MusicMaker(String sample, int loopDelay){
 				this.sample = sample;
 				this.loopDelay = loopDelay;
+			}
+
+			public void stopRunning(){
+				keepRunning = false;
 			}
 
 
@@ -554,7 +616,7 @@ public class MainMan {
 				File f = new File("/home/lejos/programs/sounds/" + sample);
 				System.out.println("File = " + f.toString());
 
-				while (true) {
+				while (keepRunning) {
 					try {
 						int returnCode = Sound.playSample(f, 100);
 						System.err.println("Play sample return code is: " + returnCode);
